@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PassSafe</title>
+    <style>
+        /* Configuração geral do fundo */
+        body {
+            background: linear-gradient(to right, #000000, #1E1E9C);
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* Estilo do título */
+        h1 {
+            font-size: 55px;
+            margin-bottom: 15px;
+        }
+
+        /* Subtítulo */
+        .subtitle {
+            font-size: 24px;
+            margin-bottom: 25px;
+        }
+
+        /* Container principal */
+        .container {
+            width: 95%;
+            max-width: 900px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Caixa de entrada */
+        input {
+            width: 95%;
+            padding: 15px;
+            font-size: 22px;
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Alinhamento dos botões */
+        .button-group {
+            display: flex;
+            width: 100%;
+            gap: 15px;
+        }
+
+        /* Estilização dos botões */
+        button {
+            flex: 1;
+            padding: 18px;
+            font-size: 22px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(to right, #add8e6, #d8b0ff);
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #8ecae6, #c084fc);
+            transform: scale(1.05);
+        }
+
+        /* Exibição da senha */
+        .password-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 25px;
+            width: 95%;
+        }
+
+        .password-display {
+            font-size: 22px;
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            word-break: break-all;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Estilização do botão de copiar */
+        .copy-btn {
+            margin-top: 10px;
+            padding: 15px;
+            font-size: 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(to right, #ffafbd, #ffc3a0);
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .copy-btn:hover {
+            background: linear-gradient(to right, #ff758c, #ff7eb3);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>PassSafe 🔒</h1>
+    <p class="subtitle">Crie e lembre-se de suas senhas com segurança</p>
+
+    <div class="container">
+        <input type="text" id="title" placeholder="Digite um título (Ex: Email, Banco)">
+        <div class="button-group">
+            <button onclick="generatePassword()">Criar Senha</button>
+            <button onclick="window.location.href='lembrar.html'">Lembrar-se</button>
+        </div>
+        <div class="password-container" id="passwordContainer">
+            <div class="password-display" id="passwordDisplay"></div>
+            <button class="copy-btn" onclick="copyPassword()">Copiar Senha</button>
+        </div>
+    </div>
+
+    <script>
+        function generatePassword() {
+            let title = document.getElementById("title").value;
+            if (!title) {
+                alert("Digite um título para a senha!");
+                return;
+            }
+
+            fetch("http://127.0.0.1:5000/generate-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title: title })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let display = document.getElementById("passwordDisplay");
+                display.innerHTML = `<strong>${data.title}:</strong> ${data.password}`;
+
+                // Exibir a senha e o botão de copiar
+                document.getElementById("passwordContainer").style.display = "flex";
+                document.getElementById("passwordContainer").setAttribute("data-password", data.password);
+            })
+            .catch(error => console.error("Erro ao gerar senha:", error));
+        }
+
+        function copyPassword() {
+            let passwordContainer = document.getElementById("passwordContainer");
+            let password = passwordContainer.getAttribute("data-password");
+
+            if (!password) {
+                alert("Nenhuma senha disponível para copiar!");
+                return;
+            }
+
+            navigator.clipboard.writeText(password).then(() => {
+                alert("Senha copiada para a área de transferência!");
+            }).catch(err => {
+                console.error("Erro ao copiar senha:", err);
+            });
+        }
+    </script>
+
+</body>
+</html>
