@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senhas Salvas - PassSafe</title>
+    <style>
+        /* Configuração geral do fundo */
+        body {
+            background: linear-gradient(to right, #000000, #1E1E9C);
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* Estilo do título */
+        h1 {
+            font-size: 55px;
+            margin-bottom: 15px;
+        }
+
+        /* Subtítulo */
+        .subtitle {
+            font-size: 24px;
+            margin-bottom: 25px;
+        }
+
+        /* Campo de pesquisa */
+        #searchInput {
+            width: 80%;
+            max-width: 500px;
+            padding: 15px;
+            font-size: 22px;
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* Estilo da tabela */
+        .table-container {
+            width: 95%;
+            max-width: 900px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 22px;
+        }
+
+        th, td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: left;
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .copyable {
+            cursor: pointer;
+            color: #00FFCC;
+            font-weight: bold;
+        }
+
+        .copyable:hover {
+            text-decoration: underline;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 22px;
+            color: red;
+        }
+
+        .delete-btn:hover {
+            color: darkred;
+        }
+
+        /* Botão de voltar */
+        .back-btn {
+            margin-top: 20px;
+            padding: 15px;
+            font-size: 22px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(to right, #ffafbd, #ffc3a0);
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(to right, #ff758c, #ff7eb3);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Senhas Salvas 🔐</h1>
+    <p class="subtitle">Pesquise e visualize suas senhas armazenadas</p>
+
+    <input type="text" id="searchInput" placeholder="🔍 Pesquisar por título..." onkeyup="filterPasswords()">
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ação</th>
+                    <th onclick="sortTable()" id="titleHeader">
+                        Título 🔽
+                    </th>
+                    <th>Senha (clique para copiar)</th>
+                </tr>
+            </thead>
+            <tbody id="passwordTable"></tbody>
+        </table>
+    </div>
+
+    <button class="back-btn" onclick="goBack()">⬅ Voltar</button>
+
+    <script>
+        let passwords = [];
+
+        function fetchPasswords() {
+            fetch("http://127.0.0.1:5000/get-passwords")
+            .then(response => response.json())
+            .then(data => {
+                passwords = data;
+                displayPasswords();
+            })
+            .catch(error => console.error("Erro ao carregar senhas:", error));
+        }
+
+        function displayPasswords() {
+            let table = document.getElementById("passwordTable");
+            table.innerHTML = "";
+
+            passwords.forEach((item, index) => {
+                let row = `<tr>
+                    <td><button class="delete-btn" onclick="deletePassword('${item.Título}')">🗑️</button></td>
+                    <td>${item.Título}</td>
+                    <td class="copyable" onclick="copyPassword(this)">${item.Senha}</td>
+                </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        function copyPassword(element) {
+            let password = element.innerText;
+            navigator.clipboard.writeText(password).then(() => {
+                alert("Senha copiada para a área de transferência!");
+            }).catch(err => {
+                console.error("Erro ao copiar senha:", err);
+            });
+        }
+
+        function deletePassword(title) {
+            let confirmDelete = confirm(`Tem certeza que deseja deletar "${title}"?`);
+            if (!confirmDelete) return;
+
+            fetch("http://127.0.0.1:5000/delete-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title: title })
+            })
+            .then(() => fetchPasswords())
+            .catch(error => console.error("Erro ao deletar senha:", error));
+        }
+
+        function goBack() {
+            window.location.href = "index.html";
+        }
+
+        fetchPasswords();
+    </script>
+
+</body>
+</html>
